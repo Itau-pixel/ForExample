@@ -1,0 +1,65 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.UI;
+using UnityEngine;
+
+public class Dialogue_Manager : MonoBehaviour
+{
+    public Text nametext;
+    public Text dialogtext;
+
+    public Move move_gg;
+    public Dialogue dialogue;
+
+    public GameObject Panel; 
+
+    private Queue<string> sentences;
+    void Start()
+    {
+        sentences = new Queue<string>();
+    }
+
+    public void StartDialog(Dialogue dialog)
+    {
+
+        move_gg.Dialog = true;
+
+        Panel.SetActive(true);
+
+        nametext.text = dialog.Name;
+
+        sentences.Clear();
+        foreach (string sentence in dialog.sentences)
+        {
+            sentences.Enqueue(sentence);
+        }
+        DisplayNextSententence();
+    }
+    public void DisplayNextSententence()
+    {
+        if (sentences.Count == 0)
+        {
+            EndDialog();
+            return;
+        }
+        string sentence = sentences.Dequeue();
+        StartCoroutine(TypeSentence(sentence));
+    }
+
+    IEnumerator TypeSentence(string sentence)
+    {
+        dialogtext.text = "";
+        foreach (char letter in sentence.ToCharArray())
+        {
+            dialogtext.text += letter;
+            yield return null;
+        }
+    }
+
+    public void EndDialog()
+    {
+        Panel.SetActive(false);
+        dialogue.End_Dialogue = true;
+        move_gg.Dialog = false;
+    }
+}
