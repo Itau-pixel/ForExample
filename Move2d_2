@@ -1,0 +1,220 @@
+using UnityEngine;
+
+public class Move : MonoBehaviour
+{
+    public GameObject bang;
+
+    public bool Dialog = false;
+
+    // Переменные для передвижения
+    public float Walk; // Скорость 
+    public float Acceleration; // Ускорение
+    private float Speed; // Личная переменная для персонажа
+
+    // Переменные для флеша
+    public GameObject[] energy_GO = new GameObject[3]; // Всего энергии
+    //public int 
+    public float Ray_distance, flash_timer = 2f; // На какое расстояние флэшнутся. Время восстановления флэша.
+    public int int_energu = 2; // Количество енергии рывка
+    public bool isright, isWall; // Право ли? Стена ли?
+
+    // Переменные для прыжка
+    public float jumpSpeed; // Скорость для прыжка
+    public float jumpSpeed_double; // Скорость для двойного прыжка
+    public bool isGrounded; // На земле или нет
+    public Transform groandCheck; // проверка есть ли земля или нет
+    public float checkRadius; // Растояние от земли
+    public LayerMask whatIsGround; // Что земля, а что нет
+    public int extraJump; // Количество прыжков сейчас
+    public int extraJumpValue; // Максимальное каличество прыжков
+    bool can_jump, can_wal_jump; // Может ли прыгать? Может ли прыгать об стену?
+    public int extraJumpWall, extraJumpWallValue; // Количество прыжков об стену сейчас. Максимальное каличество прыжков об стену
+
+    //Ссылки на компоненты
+    private Rigidbody2D rb; // Тип физика
+    private Animator ch_animator; // Анимация вообщем - то
+    public AudioSource walk;
+    public void Start()
+    {
+        walk = GetComponent<AudioSource>();
+        extraJumpWall = extraJumpWallValue; // Для обновления максемальных прыжков об стену сначала
+        extraJump = extraJumpValue; // Для обновления максемальных прыжков сначала
+        rb = GetComponent<Rigidbody2D>(); // Объявление типовой физики
+        Physics2D.queriesStartInColliders = false; // Чтобы луч не реагировал на колайдер гг
+        ch_animator = GetComponent<Animator>(); // Объявление анимации
+    }
+
+    public void Update()
+    {
+        //Auudio();
+        if (Dialog == false)
+        {
+            CharsterMove();
+            Flash();
+            DoJump(10);
+        }
+        isGrounded = Physics2D.OverlapCircle(groandCheck.position, checkRadius, whatIsGround);
+    }
+
+    public void FixedUpdate()
+    {
+        rb.velocity = new Vector2(Input.GetAxis("Horizontal") * Speed, rb.velocity.y); // Передвижение
+    }
+
+    // Метод перемещения персонажа
+    public void CharsterMove()
+    {
+        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
+        {
+            Speed = Walk;
+            ch_animator.SetBool("Is_Run", true); // Ааанимация! (Включение передвижения)
+            ch_animator.SetBool("Jump", false); // Ааанимация! (Включение прыжка)
+            ch_animator.SetBool("Jump_two", false); // Ааанимация! (Включение прыжка)
+        }
+        else if (!Input.GetKey(KeyCode.RightArrow) || !Input.GetKey(KeyCode.LeftArrow))
+        {
+            Speed = 0f;
+            ch_animator.SetBool("Is_Run", false); // Ааанимация! (отключение движения)
+            ch_animator.SetBool("Jump", false); // Ааанимация! (Включение прыжка)
+            ch_animator.SetBool("Jump_two", false); // Ааанимация! (Включение прыжка)
+        }
+
+        // Поворачивание спрайта с условием поворота изначально, по методу
+        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
+        {
+            Flip();
+        }
+    }
+    public void Auudio()
+    {
+        //if (!Input.GetKey(KeyCode.RightArrow) || !Input.GetKey(KeyCode.LeftArrow))
+            //walk.Play();
+    }
+
+    public void Flash()
+    {
+        if (int_energu >= 0 && Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            energy_GO[int_energu].SetActive(false);
+                int_energu--;
+                if (isright == true)
+                    RealizationFlash(Vector3.right, Vector2.right);
+                else
+                    RealizationFlash(Vector3.left, Vector2.left);
+            Instantiate(bang, transform.position, transform.rotation);
+        }
+
+        if (int_energu < 2)
+        {
+            flash_timer -= Time.deltaTime;
+            if (flash_timer <= 0f)
+            {
+                int_energu++;
+                energy_GO[int_energu].SetActive(true);
+                flash_timer = 2f;
+            }
+        }
+    }
+
+
+    public void RealizationFlash(Vector3 vect3, Vector2 vect2)
+    {
+        if (!isWall)
+        {
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.localScale.x * vect2, Ray_distance);
+
+            if (hit.collider == null)
+                transform.position += transform.localScale.x * vect3 * Ray_distance;
+            else
+                transform.position = hit.point;
+        }
+        else
+        {
+            if (!Physics2D.OverlapPoint(transform.position + transform.localScale.x * vect3 * Ray_distance))
+                transform.position += transform.localScale.x * vect3 * Ray_distance;
+            else
+            {
+                RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.localScale.x * vect2, Ray_distance);
+
+                if (hit.collider == null)
+                    transform.position += transform.localScale.x * vect3 * Ray_distance;
+                else
+                    transform.position = hit.point;
+            }
+        }
+    }
+
+    public void DoJump(int jS)
+    {
+        if (isGrounded == true && !Input.GetKeyDown(KeyCode.Space))
+            extraJump = extraJumpValue;
+
+        if (Input.GetKeyDown(KeyCode.Space) && extraJump == 1)
+        {
+            ch_animator.SetBool("Jump", true); // Ааанимация! (Включение прыжка)
+            rb.velocity = Vector2.up * jS; 
+            extraJump--;
+        }
+        else if (Input.GetKeyDown(KeyCode.Space) && extraJump == 0)
+        {
+            ch_animator.SetBool("Jump_two", true); // Ааанимация! (Включение прыжка)
+            rb.velocity = Vector2.up * (jS + 3);  
+            extraJump--;
+        }
+        else if (Input.GetKeyDown(KeyCode.Space) && extraJump <= -1)
+        {
+        }
+        /*
+        else if (Input.GetKeyDown(KeyCode.Space) && extraJump > 0 && isGrounded == true)
+        {
+        rb.velocity = Vector2.up * jS;
+        extraJump = extraJumpValue;
+        }*/
+
+        if (Input.GetKeyDown(KeyCode.Space) && can_wal_jump == true && extraJumpWall > 0)
+        {
+            extraJump = extraJumpValue;
+            rb.velocity = Vector2.up * jS;
+            extraJumpWall--;
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag.Equals("Wall"))
+        {
+            can_wal_jump = true;
+        }
+    }
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag.Equals("Wall"))
+        {
+            extraJumpWall = extraJumpWallValue;
+            can_wal_jump = false;
+        }
+    }
+
+    public void Wall()
+    {
+        if (can_wal_jump == true)
+        {
+            extraJump = extraJumpValue;
+        }
+    }
+
+    // Метод поворота спрайта и определения стороны поворота
+    public void Flip()
+    {
+        if (Input.GetAxis("Horizontal") < 0)
+            isright = true;
+        if (Input.GetAxis("Horizontal") > 0)
+            isright = false;
+
+
+        if (isright == true)
+            transform.localRotation = Quaternion.Euler(0, 0, 0);
+        else
+            transform.localRotation = Quaternion.Euler(0, 180, 0);
+    }
+}
