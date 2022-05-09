@@ -1,0 +1,44 @@
+using UnityEngine;
+
+public class ReactionKill : MonoBehaviour
+{
+    public ReactionKillProfile ReactKillPf;
+    public Mehanic Meh;
+    public GameObject Head;
+
+    private float timeDelta;
+
+    public void ReactionKillVoi(Transform target)
+    {
+        RaycastHit hit;
+        Ray ray = new Ray(Head.transform.position, target.position);
+
+        Physics.Raycast(ray, out hit);
+
+
+        if (hit.collider != null)
+        {
+            if (hit.collider.tag == "Die")
+            {
+                Debug.Log(1);
+            }
+            if (hit.collider.tag == "Player")
+            {
+                if (Meh.IsTrup == true)
+                    Debug.Log(1);
+            }
+            Debug.DrawLine(ray.origin, hit.point, Color.red);
+        }
+    }
+    public void OnTriggerStay(Collider other)
+    {
+        if (other.tag == "Die")
+        {
+            ReactionKillVoi(other.transform);
+        }
+        if (other.tag == "Player")
+        {
+            ReactionKillVoi(other.transform);
+        }
+    }
+}
