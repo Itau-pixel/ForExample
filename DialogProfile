@@ -1,0 +1,30 @@
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "DialogProfile1", menuName = "Dialog/Osnov")]
+public class DialogProfile : ScriptableObject
+{
+
+    public Frazer[] NPC;
+
+    public int OtvetKwestThanks, OtvetKwestNot, OtvetKwestError;
+    public string ObjectNameKwest;
+
+    public string Name;
+
+    [System.Serializable]
+    public class Frazer
+    {
+        public string NPsWord;
+        public AudioClip AudioCl;
+        public Answer[] PlAns;
+
+    }
+    [System.Serializable]
+    public class Answer
+    {
+        public string Text;
+        public int Next;
+        public bool End;
+        public string Method;
+    }
+}
