@@ -1,0 +1,96 @@
+using UnityEngine;
+
+public class MoveAki : MonoBehaviour
+{
+    public SoundPlayer SP;
+    public CharacterController Conroller;
+    public Animator Anim;
+    public Transform Cam;
+
+    public Kwest KwestG;
+
+    public float WalkSpeed = 2f, RunSpeed = 3f;
+
+    public float turnSmoothTime = 0.1f, gravity;
+    private float turnSmoothVelocity, gravityMove, Speed;
+
+    public bool Kill, ikKillToTime, dialBool;
+    void Start()
+    {
+
+    }
+
+    void Update()
+    {
+        if (Kill == false && dialBool == false)
+        {
+            float horizontal = Input.GetAxisRaw("Horizontal");
+            float vertical = Input.GetAxisRaw("Vertical");
+
+            Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+            if (direction.magnitude >= 0.1f)
+            {
+                float tarhetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + Cam.eulerAngles.y;
+                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, tarhetAngle, ref turnSmoothVelocity, turnSmoothTime);
+                transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+                Vector3 MoveDir = Quaternion.Euler(0f, tarhetAngle, 0f) * Vector3.forward;
+                Conroller.Move(MoveDir.normalized * Speed * Time.deltaTime);
+            }
+            MoveAnimatiom();
+            RunMoveAnimation();
+        }
+        if (ikKillToTime == true)
+        {
+            Anim.SetBool("Walk", false);
+            Anim.SetBool("Run", false);
+        }
+        else
+        {
+            Kill = false;
+        }
+        Gravity();
+    }
+    private void MoveAnimatiom()
+    {
+        if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
+        {
+            if (!Input.GetKey(KeyCode.LeftShift))
+            {
+                SP.SoundPlayPlayerWalk();
+            }
+            Speed = WalkSpeed;
+            Anim.SetBool("Walk", true);
+        }
+        else
+        {
+            Anim.SetBool("Walk", false);
+        }
+    }
+    private void RunMoveAnimation()
+    {
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            SP.SoundPlayPlayerRun();
+            Speed = RunSpeed;
+            Anim.SetBool("Run", true);
+        }
+        else
+        {
+            Anim.SetBool("Run", false);
+        }
+    }
+    private void Gravity()
+    {
+        if (!Conroller.isGrounded)
+        {
+            gravityMove -= gravity;
+        }
+        Vector3 moveVector;
+        moveVector.x = 0;
+        moveVector.y = gravityMove;
+        moveVector.z = 0;
+
+        Conroller.Move(moveVector * Time.deltaTime);
+    }
+}
