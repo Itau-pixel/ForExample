@@ -1,0 +1,120 @@
+using UnityEngine.UI;
+using UnityEngine;
+
+public class DialogCh : MonoBehaviour
+{
+    public MoveAki MA;
+    public Student St;
+    public GameObject UIDial;
+    public DialogProfile DialogProf;
+    public AudioSource AudioSour;
+    public Text TextD, NameD;
+    private int Now;
+    public Font font;
+
+    private bool SwitshNumNow;
+    public void StartDial()
+    {
+        UIDial.SetActive(true);
+        TextD.text = DialogProf.NPC[Now].NPsWord;
+        AudioSour.PlayOneShot(DialogProf.NPC[Now].AudioCl);
+        NameD.text = DialogProf.Name;
+        St.DialogActive = true;
+        gameObject.transform.LookAt(St.GG);
+        St.GG.transform.LookAt(gameObject.transform);
+        St.GG.transform.rotation = new Quaternion(0f, St.GG.transform.rotation.y, 0f, St.GG.transform.rotation.w);
+        gameObject.transform.rotation = new Quaternion(0f, gameObject.transform.rotation.y, 0f, gameObject.transform.rotation.w);
+    }
+    private void OnGUI()
+    {
+        if (St.DialogActive == true)
+        {
+            for (int i = 0; i < DialogProf.NPC[Now].PlAns.Length; i++)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                GUI.skin.font = font;
+                GUI.skin.label.font = GUI.skin.button.font = GUI.skin.box.font = font;
+                GUI.skin.label.fontSize = GUI.skin.box.fontSize = GUI.skin.button.fontSize = 25;
+                if(St.TimeFail == true)
+                {
+                    St.DialogActive = false;
+                    UIDial.SetActive(false);
+                    Cursor.lockState = CursorLockMode.Locked;
+                    MA.dialBool = false;
+                }
+                if (GUI.Button(new Rect(Screen.width / 3, (Screen.height/3)+(Screen.height/15) * i, Screen.width / 4+ Screen.width / 10, Screen.height / 23), DialogProf.NPC[Now].PlAns[i].Text))
+                {
+                    if (DialogProf.NPC[Now].PlAns[i].End)
+                    {
+                        St.DialogActive = false;
+                        UIDial.SetActive(false);
+                        Cursor.lockState = CursorLockMode.Locked;
+                        MA.dialBool = false;
+                    }
+                    if (DialogProf.NPC[Now].PlAns[i].Method != "")
+                    {
+                        switch (DialogProf.NPC[Now].PlAns[i].Method)
+                        {
+                            case "Следовать":
+                                St.SledForGG(true);
+                                break;
+                            case "НеСледовать":
+                                St.SledForGG(false);
+                                break;
+                            case "Квест":
+                                if (MA.KwestG.Object == "None")
+                                {
+                                    MA.KwestG.Object = DialogProf.ObjectNameKwest;
+                                }
+                                else
+                                {
+                                    MA.KwestG.TextError = true;
+                                    Now = DialogProf.OtvetKwestError;
+                                    SwitshNumNow = true;
+                                }
+                                break;
+                            case "МинусКвест":
+                                MA.KwestG.Object = "None";
+                                MA.KwestG.CompleteKwest = false;
+                                break;
+                            case "ПлюсКвест":
+                                for (int irt = 0; irt < MA.KwestG.GGMeh.Inventar.Length; irt += 1)
+                                {
+                                    if (MA.KwestG.Object == MA.KwestG.GGMeh.Inventar[irt])
+                                    {
+                                        MA.KwestG.CompleteKwest = true;
+                                    }
+                                }
+                                if (MA.KwestG.CompleteKwest == true)
+                                {
+                                    MA.KwestG.GGMeh.TakeNPC();
+                                    Now = DialogProf.OtvetKwestThanks;
+                                    SwitshNumNow = true;
+                                    MA.KwestG.Object = "None";
+                                }
+                                else
+                                {
+                                    Now = DialogProf.OtvetKwestNot;
+                                    SwitshNumNow = true;
+                                }
+                                break;
+                            case "ОкончаниеКвеста":
+                                MA.KwestG.CompleteKwest = false;
+                                break;
+                        }
+                    }
+                    if (SwitshNumNow == false)
+                        Now = DialogProf.NPC[Now].PlAns[i].Next;
+                    else
+                        SwitshNumNow = false;
+                    TextD.text = DialogProf.NPC[Now].NPsWord;
+                    if (Now != 0)
+                        AudioSour.PlayOneShot(DialogProf.NPC[Now].AudioCl);
+                    else
+                        AudioSour.PlayOneShot(DialogProf.NPC[DialogProf.NPC.Length-1].AudioCl);
+                }
+            }
+        }
+    }
+
+}
