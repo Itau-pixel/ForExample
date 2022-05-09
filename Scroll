@@ -1,0 +1,45 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Scroll : MonoBehaviour
+{
+    public float ZoomMax, ZoomMin, SensorPov;
+
+    public Camera cameras;
+    public GameObject Sfer;
+    private Touch TA, TB, TOne, TTwo;
+    private Vector2 TAD, TBD, TOneDelta, TTwoDelta, Rotayt;
+    private float ButTouchPos, ButTouchDir, Zoom, R1, R2;
+    public float RotaytSpeed;
+
+    void Update()
+    {
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)
+        {
+            Vector2 touchDeltaPosition = Input.GetTouch(0).deltaPosition;
+            R1 -= touchDeltaPosition.x * RotaytSpeed * Time.deltaTime;
+
+            R2 -= touchDeltaPosition.y * RotaytSpeed * Time.deltaTime;
+            Sfer.transform.rotation = Quaternion.Euler(-R2, R1, 0);
+        }
+        if (Input.touchCount == 2)
+        {
+            TA = Input.GetTouch(1);
+            TB = Input.GetTouch(0);
+            TAD = TA.position - TA.deltaPosition;
+            TBD = TB.position - TB.deltaPosition;
+
+            ButTouchPos = Vector2.Distance(TA.position, TB.position);
+            ButTouchDir = Vector2.Distance(TAD, TBD);
+            Zoom = ButTouchPos - ButTouchDir;
+            var currentZoom = cameras.orthographicSize - Zoom * SensorPov;
+            cameras.orthographicSize = Mathf.Clamp(currentZoom, ZoomMin, ZoomMax);
+            if (TBD != TB.position)
+            {
+                var angle = Vector3.SignedAngle(TB.position - TA.position, TBD - TAD, -cameras.transform.forward);
+                cameras.transform.RotateAround(cameras.transform.position, -cameras.transform.forward, 0);
+            }
+        }
+    }
+}
