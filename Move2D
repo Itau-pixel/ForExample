@@ -1,0 +1,103 @@
+using UnityEngine;
+
+public class MoveForPhone : MonoBehaviour
+{
+    // Переменные для прыжка.
+    public float jumpSpeed; // Скорость для прыжка.
+    public GroundCheck GC;
+    public int extraJump; // Количество прыжков сейчас.
+    public int extraJumpValue; // Максимальное каличество прыжков.
+
+    //Ссылки на компоненты.
+    private Rigidbody2D rb; // Тип физика.
+    public Animator ch_animator; // Анимация вообщем - то.
+
+    public enemyControl eC;
+
+    public AudioClip run;
+    public AudioClip jump;
+
+    public AudioSource Sour;
+
+    private bool All;
+
+    public bool AdsEnd = false;
+    public GameObject ShowAds;
+
+    public float Xp, Yp;
+    public void Start()
+    {
+        extraJump = extraJumpValue; // Для обновления максимальных прыжков сначала.
+    }
+
+
+    public void Update()
+    {
+        MoveComtrol();
+    }
+
+    private void MoveComtrol()
+    {
+        if (All == true)
+        {
+            if(GC.isGround == true)
+            {
+                ch_animator.SetBool("IsRun", false);
+                ch_animator.SetBool("IsJump", true);
+                DoJump();
+                PlaySoundJump();
+                All = false;
+            }
+        }
+        else
+        {
+            ch_animator.SetBool("IsRun", true);
+            ch_animator.SetBool("IsJump", false);
+        }
+        if (eC.ends == false)
+            gameObject.transform.position = new Vector3(Xp, transform.position.y, transform.position.z);
+    }
+    // Метод перемещения персонажа.
+    public void CharsterMove()
+    {
+        All = true;
+    }
+
+
+    void PlaySoundJump()
+    {
+        Sour.loop = false;
+        Sour.clip = jump;
+        Sour.Play();
+    }
+
+    public void DoJump()
+    {
+        rb.velocity = Vector2.up * jumpSpeed;
+    }
+
+    public void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Enemy")
+        {
+            if (AdsEnd == false)
+            {
+                eC.ends = true;
+                ShowAds.SetActive(true);
+                ch_animator.enabled = false;
+            }
+            else
+            {
+                eC.End = true;
+                eC.ends = false;
+                ch_animator.enabled = false;
+            }
+        }
+    }
+    public void GameOver()
+    {
+        AdsEnd = true;
+        ShowAds.SetActive(false);
+        eC.End = true;
+    }
+}
