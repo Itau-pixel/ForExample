@@ -1,0 +1,49 @@
+using UnityEngine;
+
+public class Add : MonoBehaviour
+{
+    private Touch One;
+    public Camera camera;
+
+    public Material[] AllMaterial;
+
+    public string[,] Vrag = new string[10, 20];
+    void Start()
+    {
+        for (int i = 1; i < 11; i++)
+        {
+            for (int j = 1; j < 21; j++)
+            {
+                Vrag[i-1, j-1] = i.ToString() + j.ToString();
+            }
+        }
+        Debug.Log(Vrag[0,0]);
+    }
+
+    void Update()
+    {
+        if (Input.touchCount == 1)
+        {
+            RaycastHit();
+        }
+    }
+    private void RaycastHit()
+    {
+        RaycastHit hit;
+        Ray ray = camera.ScreenPointToRay(Input.GetTouch(0).position);
+        Physics.Raycast(ray, out hit);
+        if (hit.collider != null)
+        {
+            if (Input.GetTouch(0).phase == TouchPhase.Began)
+            {
+                ChangeMaterialEnd(hit.collider.gameObject);
+            }
+        }
+    }
+    private void ChangeMaterialEnd(GameObject gm)
+    {
+        MeshRenderer Mr;
+        Mr = gm.GetComponent<MeshRenderer>();
+        Mr.material = AllMaterial[2];
+    }
+}
