@@ -1,0 +1,77 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Cam : MonoBehaviour
+{
+    public float dumping = 5f;
+    public Vector2 offset = new Vector2(1.8f, 0.6f);
+    public bool isLeft;
+    private Transform player;
+    private int LastX;
+
+    public float MaxX = 10f;
+    public float MinX = -8.5f;
+    public float MaxY = 10f;
+    public float MinY = -8.5f;
+
+    void Start()
+    {
+        offset = new Vector2(Mathf.Abs(offset.x), offset.y);
+        FindPlayer(isLeft);
+    }
+
+    public void FindPlayer(bool playerIsLeft)
+    {
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        LastX = Mathf.RoundToInt(player.position.x);
+        if (playerIsLeft)
+        {
+            transform.position = new Vector3(player.position.x - offset.x, player.position.y - offset.y, transform.position.z);
+        }
+        else
+        {
+            transform.position = new Vector3(player.position.x + offset.x, player.position.y + offset.y, transform.position.z);
+        }
+    }
+
+    void FixedUpdate()
+    {
+        if (player)
+        {
+            int currentX = Mathf.RoundToInt(player.position.x);
+            if (currentX > LastX)
+            {
+                isLeft = false;
+            }
+            else if (currentX < LastX)
+            {
+                isLeft = true;
+            }
+            LastX = Mathf.RoundToInt(player.position.x);
+
+            Vector3 target;
+            if (isLeft)
+            {
+                target = new Vector3(player.position.x - offset.x, player.position.y + offset.y, transform.position.z);
+            }
+            else
+            {
+                target = new Vector3(player.position.x + offset.x, player.position.y + offset.y, transform.position.z);
+            }
+
+            if (currentX < MinX)
+            {
+                target = new Vector3(MinX, player.position.y + offset.y, transform.position.z);
+            }
+
+            Vector3 currentPosition = Vector3.Lerp(transform.position, target, dumping * Time.deltaTime);
+            transform.position = currentPosition;
+        }
+
+        transform.position = new Vector3(Mathf.Clamp(transform.position.x, MinX, MaxX), Mathf.Clamp(transform.position.y, MinY, MaxY), transform.position.z);
+    }
+
+
+}
